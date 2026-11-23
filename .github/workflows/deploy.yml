@@ -1,0 +1,67 @@
+name: Deploy Life OS to Apps Script
+
+# Every change to main that touches the engine is checked, then pushed to the "Life OS" Apps Script
+# project with clasp. The next hourly sync (or any Google Calendar change) applies it.
+# Needs two repository secrets: CLASPRC_JSON (contents of ~/.clasprc.json) and FEED_TOKEN (White Lotus feed token).
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps-script/**', '.clasp.json', 'test/**', '.github/workflows/deploy.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-apps-script
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check the code
+        run: |
+          for f in apps-script/*.js; do node --check "$f"; done
+          node -e "JSON.parse(require('fs').readFileSync('apps-script/appsscript.json','utf8'))"
+          echo "var LIFEOS_SECRETS = { feedToken: 'test' };" > apps-script/Secrets.js
+          node test/run-planner.cjs test/fixtures/feed-sample.json 2026-11-22 12:40 > /dev/null
+          rm apps-script/Secrets.js
+
+      - name: Check for deploy secrets
+        id: secrets
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          FEED_TOKEN: ${{ secrets.FEED_TOKEN }}
+        run: |
+          if [ -n "$CLASPRC_JSON" ] && [ -n "$FEED_TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Not deployed: add the CLASPRC_JSON and FEED_TOKEN repository secrets (see README → Deploying)."
+          fi
+
+      - name: Write private files (never committed)
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          FEED_TOKEN: ${{ secrets.FEED_TOKEN }}
+        run: |
+          umask 077
+          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
+          node -e "require('fs').writeFileSync('apps-script/Secrets.js', '// Written by CI from the FEED_TOKEN secret.\nvar LIFEOS_SECRETS = { feedToken: ' + JSON.stringify(process.env.FEED_TOKEN.trim()) + ' };\n')"
+
+      - name: Push to Apps Script
+        if: steps.secrets.outputs.ready == 'true'
+        run: npx --yes @google/clasp@3.4.1 push --force
+
+      - name: Clean up
+        if: always()
+        run: rm -f "$HOME/.clasprc.json" apps-script/Secrets.js

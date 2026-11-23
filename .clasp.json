@@ -1,0 +1,23 @@
+{
+  "scriptId": "1kD9JjXzcEyvF6p51Dl1AYrtoU-LQnpVwPAk7vRbaiHsBQKZddbQlhpUd",
+  "rootDir": "apps-script",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "jsonExtensions": [
+    ".json"
+  ],
+  "filePushOrder": [
+    "apps-script/Config.js",
+    "apps-script/Secrets.js",
+    "apps-script/Planner.js",
+    "apps-script/Notify.js",
+    "apps-script/Engine.js",
+    "apps-script/Main.js"
+  ],
+  "skipSubdirectories": false
+}

@@ -1,0 +1,4 @@
+apps-script/Secrets.js
+.clasprc.json
+node_modules/
+*.log
