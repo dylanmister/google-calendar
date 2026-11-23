@@ -65,6 +65,8 @@ Without them the Action still checks the code but skips the deploy, with a warni
 
 Edit `apps-script/Config.js` and push to `main`.
 
+- **One day is different** (volleyball at 8, a day trip, an appointment): add it to `dayOverrides` with the
+  wake-up, the fixed blocks, any exact times and what to skip. Only that day changes.
 - **Different wake time / sleep target:** `sleep.wake`, `sleep.hours`, `sleep.bedtime`.
 - **Business focus by weekday:** `business.byWeekday`.
 - **Stop everything:** run `pauseLifeOS()`; your calendars stay as they are.

@@ -135,4 +135,29 @@ var LIFEOS = {
   },
 
   footer: '— Life OS. Move or delete this and the sync leaves your change alone.',
+
+  // One-off days, keyed by date (YYYY-MM-DD). Everything not listed follows the normal rules. Past dates are ignored.
+  //   wake        — wake-up that morning (the night before gets a full sleep before it)
+  //   blocks      — fixed events: { key, cal, title, start, end, travel, remind: [min], location, desc }
+  //   at          — exact start times for 'workout', 'bible', 'biz', 'read', or an extra like 'x:guitar'
+  //   businessMin — shorter (or longer) business block
+  //   skip        — keys to leave out that day: 'read', 'bible', 'biz', 'x:guitar', 'x:errands', ...
+  //   workoutNote — shown on the White Lotus event when it's moved
+  dayOverrides: {
+    '2026-11-23': {
+      why: 'Beach volleyball 8–10 AM',
+      wake: '7:00',
+      blocks: [
+        { key: 'volleyball', cal: 'hob', title: '🏐 Beach volleyball', start: '8:00', end: '10:00', travel: 25, remind: [35],
+          location: 'Sand court (about 25 min away)',
+          desc: 'Two hours of play. Eat something light before you leave (banana, toast), bring 1–1.5 L of water and sunscreen, and warm up for 10 minutes before the first game.' },
+        { key: 'refuel-am', cal: 'rest', title: '🍳 Refuel: breakfast + shower', start: '10:30', end: '11:10',
+          desc: 'Real breakfast after volleyball: protein, carbs, plenty of water. Then shower.' },
+      ],
+      at: { bible: '11:15', biz: '11:45', workout: '13:00' },
+      businessMin: 60,
+      skip: ['read', 'x:guitar', 'x:errands'],
+      workoutNote: 'Moved to 1:00 PM so you can play volleyball this morning, with a meal in between. If your back and arms are cooked after volleyball, tap "Push it back a day" in White Lotus instead and the calendar will follow.',
+    },
+  },
 };

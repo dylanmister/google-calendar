@@ -53,6 +53,13 @@ var Planner = (function () {
         if (!afterShift || ideal >= asleep) asleep = Math.min(asleep, ideal);
       }
     }
+    var ovNext = (C.dayOverrides || {})[addDays(date, 1)];
+    if (ovNext && ovNext.wake) { // a one-off day sets its own wake-up; full sleep before it unless work runs later
+      wakeNext = toMin(ovNext.wake); early = false;
+      var target = wakeNext + 1440 - S.hours * 60;
+      afterShift = lastEnd !== null && lastEnd + S.afterShiftMin > target;
+      asleep = afterShift ? lastEnd + S.afterShiftMin : target;
+    }
     return { asleep: asleep, wakeNext: wakeNext, afterShift: afterShift, early: early, minutes: wakeNext + 1440 - asleep };
   }
 
@@ -131,6 +138,10 @@ var Planner = (function () {
     var early = shifts.length && shifts[0].start < toMin('11:00');
     var light = early || workMin >= 7 * 60;
     var wk = weekPlan(ctx, date), placed = ctx.weekPlaced[wk.key] = ctx.weekPlaced[wk.key] || {};
+    // One-off changes for this date (LIFEOS.dayOverrides): fixed blocks, exact times, skips, shorter business.
+    var ov = (C.dayOverrides || {})[date] || null;
+    function skipped(key) { return !!(ov && ov.skip && ov.skip.indexOf(key) >= 0); }
+    function at(key) { return ov && ov.at && ov.at[key] ? toMin(ov.at[key]) : null; }
 
     function block(s, e) { occ.push([s, e]); }
     function free(s, e) { for (var i = 0; i < occ.length; i++) if (s < occ[i][1] && e > occ[i][0]) return false; return true; }
@@ -158,8 +169,14 @@ var Planner = (function () {
     }
     // Place a block, or reuse the time of a kept (already-started) event with the same key.
     function put(key, cal, dur, from, to, pre, post, title, desc, remind, extra) {
+      if (skipped(key)) return null;
       var k = kept(key);
       if (k) { block(k.start, k.end); return add(key, cal, k.start, k.end, title, desc, remind, extra); }
+      var a = at(key);
+      if (a !== null && a >= floor && free(a - (pre || 0), a + dur + (post || 0))) {
+        block(a - (pre || 0), a + dur + (post || 0));
+        return add(key, cal, a, a + dur, title, desc, remind, extra);
+      }
       var start = roundUp(Math.max(from, floor, wake), 5);
       while (true) {
         var s = find(dur, start, to, pre, post);
@@ -203,12 +220,25 @@ var Planner = (function () {
       }
     }
 
+    // One-off fixed blocks for this date (for example a morning of beach volleyball), with their drive time.
+    if (ov && ov.blocks) ov.blocks.forEach(function (b, i) {
+      var s = toMin(b.start), e = toMin(b.end), tr = b.travel || 0;
+      add('ov:' + (b.key || i), b.cal, s, e, b.title,
+        (b.desc || '') + (tr ? '\nLeave by ' + fmt(s - tr) + ' (' + tr + '-minute drive each way).' : ''),
+        b.remind || null, b.location ? { location: b.location } : null);
+      block(s - tr, e + tr);
+    });
+
     // White Lotus session: morning first, after work if the morning is taken, otherwise flag it.
     var wo = ctx.workoutByDate[date], woEnd = null, refuelEnd = null;
     if (wo) {
       var travel = travelFor(wo), dur = roundUp(wo.minutes, 5), k = ctx.keep['wl:' + wo.day];
       var start = null, note = '';
+      var aw = at('workout');
       if (k && !k.allDay) { start = k.start; }
+      else if (aw !== null && aw >= floor && free(aw - travel, aw + dur + travel + 15)) {
+        start = aw; note = (ov && ov.workoutNote) || '';
+      }
       else {
         var pref = Math.max(defaultWorkoutStart(wo, date), wake + 40 + travel);
         var morningEnd = Math.min(toMin(C.workout.morningLatestEnd), firstPrep === null ? 1440 : firstPrep);
@@ -254,10 +284,13 @@ var Planner = (function () {
     var bizEnd = null;
     if (biz && !light) {
       var want = off ? C.business.offDayMin : (dow === 6 ? C.business.saturdayMin : C.business.workDayMin);
+      var normal = want;
+      if (ov && ov.businessMin) want = ov.businessMin;
       var bFrom = Math.max(refuelEnd || wake + 30, toMin('9:00'));
       var bTo = firstPrep !== null ? firstPrep : toMin('18:00');
       var bDesc = 'Objective: ' + biz.objective + '\nDone when: ' + biz.done + '\nNext: ' + biz.next
-        + '\n\nRevenue first: prospecting, outreach and client work before polishing.';
+        + '\n\nRevenue first: prospecting, outreach and client work before polishing.'
+        + (want < normal ? '\nShorter today (' + want + ' min instead of ' + normal + '): do the most valuable half of the objective.' : '');
       var bTitle = '🚀 Business · ' + biz.name + (off ? ' (deep work)' : '');
       var b = null;
       for (var d = want; d >= C.business.shortestMin && !b; d -= 15) {

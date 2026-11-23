@@ -299,7 +299,9 @@ var Engine = (function () {
       if (x) {
         var moved = d.key.indexOf('wl:') === 0 && x.m.date !== d.date; // White Lotus moved this workout to another day
         if (userChanged(x) && !moved) { stats.yours++; return; }
-        if (started(x) && !moved) { stats.untouched++; return; }
+        // Tonight's sleep block can still change while it's "in progress" (you're not asleep yet).
+        var sleepingNow = /\|sleep$/.test(d.key) && x.m.date === L.today && x.m.end > L.nowMin;
+        if (started(x) && !moved && !sleepingNow) { stats.untouched++; return; }
         if (!differs(x, body) && x.cal === d.cal) { stats.untouched++; return; }
         if (out()) { stats.deferred++; return; }
         if (x.cal !== d.cal) {

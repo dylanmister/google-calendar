@@ -18,6 +18,14 @@ Read `README.md` first. Dylan often asks for changes from his phone, so finish t
    `clasp push`. The next sync (within the hour, or sooner if his calendar changes) applies it.
    If Dylan asked for the change to go live, merge to `main`; otherwise open a PR he can merge from his phone.
 
+## One-off days ("tomorrow I'm doing X")
+
+Add an entry to `dayOverrides` in `apps-script/Config.js`, keyed by date. It can set that morning's wake-up
+(the night before gets a full 8 h before it), add fixed blocks with drive time, pin exact start times (`at`),
+shorten the business block, and skip items for that day only. Everything else is planned around it by the
+normal rules. Never move a White Lotus workout to another day; pin it to a different time with `at.workout`
+instead, and remind Dylan he can push it back in the app. Delete past entries when you add new ones.
+
 ## Rules
 
 - Never commit `apps-script/Secrets.js` (it is git-ignored; CI writes it from the `FEED_TOKEN` secret).
