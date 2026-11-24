@@ -136,6 +136,13 @@ var LIFEOS = {
 
   footer: '— Life OS. Move or delete this and the sync leaves your change alone.',
 
+  // Dated notes and reminders: an all-day event on that date (🧺 Errands unless cal says otherwise).
+  //   remind — minutes before midnight of that day; 900 = the day before at 9:00 AM (the default)
+  notes: [
+    { date: '2027-02-24', title: 'Cancel Shopify account', remind: [900],
+      desc: 'Cancel before it renews. In Shopify admin: Settings → Plan → Deactivate store.\nFirst export anything you want to keep and cancel any paid apps or domains billed through Shopify.' },
+  ],
+
   // One-off days, keyed by date (YYYY-MM-DD). Everything not listed follows the normal rules. Past dates are ignored.
   //   wake        — wake-up that morning (the night before gets a full sleep before it)
   //   blocks      — fixed events: { key, cal, title, start, end, travel, remind: [min], location, desc }

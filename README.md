@@ -65,6 +65,8 @@ Without them the Action still checks the code but skips the deploy, with a warni
 
 Edit `apps-script/Config.js` and push to `main`.
 
+- **A note or reminder on a date** ("cancel Shopify on Feb 24"): add it to `notes`. It shows as an all-day
+  📝 event in 🧺 Errands, with a reminder the day before at 9 AM unless you choose another.
 - **One day is different** (volleyball at 8, a day trip, an appointment): add it to `dayOverrides` with the
   wake-up, the fixed blocks, any exact times and what to skip. Only that day changes.
 - **Different wake time / sleep target:** `sleep.wake`, `sleep.hours`, `sleep.bedtime`.

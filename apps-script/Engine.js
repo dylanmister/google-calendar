@@ -230,7 +230,7 @@ var Engine = (function () {
         else if (userChanged(x)) keep[key] = { start: m.start, end: m.end };
         return;
       }
-      if (key.indexOf('rest:') === 0) return;
+      if (key.indexOf('rest:') === 0 || key.indexOf('note:') === 0) return;
       var date = key.slice(0, 10);
       if (date !== m.date || m.allDay) return; // you moved it to another day: it's yours now
       if (date === L.today && (m.start < L.nowMin + 60 || !replanToday)) keep[key] = { start: m.start, end: m.end };
@@ -267,7 +267,7 @@ var Engine = (function () {
   }
 
   // ---------- id store (to tell "you deleted it" from "never created") ----------
-  function bucketOf(key) { return key.indexOf('wl:') === 0 ? 'st:wl' : key.indexOf('rest:') === 0 ? 'st:rest' : 'st:' + key.slice(0, 10); }
+  function bucketOf(key) { return key.indexOf('wl:') === 0 ? 'st:wl' : key.indexOf('rest:') === 0 ? 'st:rest' : key.indexOf('note:') === 0 ? 'st:note' : 'st:' + key.slice(0, 10); }
   function Store() { this.cache = {}; this.dirty = {}; }
   Store.prototype.get = function (key) { var b = bucketOf(key); if (!(b in this.cache)) this.cache[b] = getJSON(b, {}); return this.cache[b][key]; };
   Store.prototype.set = function (key, val) { var b = bucketOf(key); this.get(key); if (val === undefined) delete this.cache[b][key]; else this.cache[b][key] = val; this.dirty[b] = true; };
@@ -381,6 +381,7 @@ var Engine = (function () {
     var feedByDay = {};
     feed.days.forEach(function (w) { feedByDay[w.day] = w; });
     var lastDate = feed.program.end > (routineThrough || '') ? feed.program.end : routineThrough;
+    (C.notes || []).forEach(function (n) { if (n.date && n.date > lastDate) lastDate = n.date; }); // look far enough ahead to find every note
     var existing = listManaged(cals, L, lastDate);
 
     var snap = Notify.loadSnapshot();

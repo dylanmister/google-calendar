@@ -385,6 +385,13 @@ var Planner = (function () {
       var s = defaultWorkoutStart(w, w.date);
       events.push(workoutEvent(w, s, s + roundUp(w.minutes, 5), ''));
     });
+    (C.notes || []).forEach(function (n) {
+      if (!n.date || !n.title || n.date < input.today) return;
+      var slug = String(n.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+      events.push({ key: 'note:' + n.date + ':' + slug, cal: n.cal || 'err', date: n.date, allDay: true,
+        title: '📝 ' + n.title, desc: (n.desc ? n.desc + '\n\n' : '') + C.footer,
+        reminders: n.remind === undefined ? [900] : [].concat(n.remind) });
+    });
     (input.restDates || []).forEach(function (d) {
       if (d < input.today) return;
       events.push({ key: 'rest:' + d, cal: 'rest', date: d, allDay: true, title: '😴 Rest day (pushed back in White Lotus)',

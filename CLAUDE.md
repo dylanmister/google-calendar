@@ -26,6 +26,11 @@ shorten the business block, and skip items for that day only. Everything else is
 normal rules. Never move a White Lotus workout to another day; pin it to a different time with `at.workout`
 instead, and remind Dylan he can push it back in the app. Delete past entries when you add new ones.
 
+## Notes and reminders ("remind me on <date> to …")
+
+Add `{ date, title, desc, remind }` to `notes` in `apps-script/Config.js`. It becomes an all-day 📝 event in
+🧺 Errands on that date; `remind` is minutes before midnight of that day (900 = the day before at 9 AM).
+
 ## Rules
 
 - Never commit `apps-script/Secrets.js` (it is git-ignored; CI writes it from the `FEED_TOKEN` secret).
